@@ -47,6 +47,13 @@
 #include <linux/extcon.h>
 #include <linux/reset.h>
 #include <soc/qcom/boot_stats.h>
+#ifdef CONFIG_VENDOR_LEECO
+#include <linux/qpnp/qpnp-adc.h>
+#include <linux/suspend.h>
+#include <linux/fb.h>
+#include <linux/notifier.h>
+#include <linux/cclogic.h>
+#endif
 
 #include "power.h"
 #include "core.h"
@@ -59,12 +66,16 @@
 
 /* time out to wait for USB cable status notification (in ms)*/
 #define SM_INIT_TIMEOUT 30000
-#define DWC3_WAKEUP_SRC_TIMEOUT 5000
+#define DWC3_WAKEUP_SRC_TIMEOUT 1000
 /* AHB2PHY register offsets */
 #define PERIPH_SS_AHB2PHY_TOP_CFG 0x10
 
 /* AHB2PHY read/write waite value */
 #define ONE_READ_WRITE_WAIT 0x11
+
+#ifdef CONFIG_VENDOR_LEECO
+static struct dwc3_msm *_msm_dwc;
+#endif
 
 /* DP_DM linestate float */
 #define DP_DM_STATE_FLOAT 0x02
@@ -4354,3 +4365,43 @@ static void __exit dwc3_msm_exit(void)
 	platform_driver_unregister(&dwc3_msm_driver);
 }
 module_exit(dwc3_msm_exit);
+
+/**Added**/
+int pi5usb_set_msm_usb_host_mode(bool mode)
+{
+        struct dwc3_msm *mdwc = NULL;
+        struct dwc3 *dwc = NULL;
+
+        if (NULL == _msm_dwc)
+                return -ENODEV;
+
+        mdwc = _msm_dwc;
+        dwc = platform_get_drvdata(mdwc->dwc3);
+
+        dev_err(mdwc->dev, "%s = %s_mode.\n", __func__, mode?"host":"device");
+
+        if (mode) {
+                /* host mode:bsv=0,id=0 */
+                //mdwc->ext_xceiv.id = false;
+		mdwc->id_state = DWC3_ID_GROUND;
+        } else {
+                /* device mode:bsv=1,id=1 */
+                //mdwc->ext_xceiv.id = true;
+		mdwc->id_state = DWC3_ID_FLOAT;
+        }
+
+        if (atomic_read(&dwc->in_lpm)) {
+                dev_dbg(mdwc->dev, "%s: calling resume_work\n", __func__);
+        	dwc3_resume_work(&mdwc->resume_work);
+        } else {
+                dev_dbg(mdwc->dev, "%s: notifying xceiv event\n", __func__);
+                //if (mdwc->otg_xceiv)
+                //        mdwc->ext_xceiv.notify_ext_events(mdwc->otg_xceiv->otg,
+                //                                        DWC3_EVENT_XCEIV_STATE);
+
+		dwc3_ext_event_notify(mdwc);
+        }
+
+        return mode;
+}
+EXPORT_SYMBOL(pi5usb_set_msm_usb_host_mode);
