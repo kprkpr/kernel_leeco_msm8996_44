@@ -100,3 +100,9 @@ obj-$(CONFIG_TOUCHSCREEN_ROHM_BU21023)	+= rohm_bu21023.o
 obj-$(CONFIG_TOUCHSCREEN_ST)		+= st/
 obj-$(CONFIG_TOUCHSCREEN_GT9X_V24)	+= gt9x_2.4/
 obj-$(CONFIG_TOUCHSCREEN_GT1151)		+= gt1151/
+
+#Added
+obj-$(CONFIG_TOUCHSCREEN_SYNAPTICS_DSX_LETV)	+= synaptics_dsx_letv/
+obj-$(CONFIG_TOUCHSCREEN_HIDEEP_TP_LETV)		+= hideep_letv/
+obj-$(CONFIG_LETVS_CLASS)       +=  letv_clss.o
+obj-$(CONFIG_TOUCHSCREEN_FTS) 		+= focaltech_letv/

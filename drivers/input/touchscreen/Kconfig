@@ -12,6 +12,10 @@ menuconfig INPUT_TOUCHSCREEN
 if INPUT_TOUCHSCREEN
 
 source "drivers/input/touchscreen/synaptics_dsx/Kconfig"
+#Added
+source "drivers/input/touchscreen/synaptics_dsx_letv/Kconfig"
+source "drivers/input/touchscreen/hideep_letv/Kconfig"
+#
 
 config OF_TOUCHSCREEN
 	def_tristate INPUT
@@ -622,6 +626,40 @@ config TOUCHSCREEN_EDT_FT5X06
 	  To compile this driver as a module, choose M here: the
 	  module will be called edt-ft5x06.
 
+#Added
+config TOUCHSCREEN_FTS
+	bool "FocalTech I2C Touchscreen (LeTV)"
+	depends on I2C
+	help
+	  Say Y here if you have a Focaltech I2C touchscreen
+	  connected to your LeEco/LeTV device.
+
+	  If unsure, say N.
+
+config LETVS_CLASS
+       bool "letv class  for Mediatek package"
+       default n
+       help
+         Say Y here if you have letv class.
+
+         If unsure, say N.
+
+         To compile this dirver as a module, choose M here: the
+	 module will be called.
+
+config TOUCHSCREEN_ATMEL_MXT_LETV
+	tristate "Atmel mXT I2C Touchscreen for the LeTV platform"
+	depends on I2C
+	help
+	  Say Y here if you have Atmel mXT series I2C touchscreen,
+	  such as mXT640T, connected to your system.
+
+	  If unsure, say N.
+
+	  To compile this driver as a module, choose M here: the
+	  module will be called atmel_mxt_ts_letv.
+#
+
 config TOUCHSCREEN_MIGOR
 	tristate "Renesas MIGO-R touchscreen"
 	depends on SH_MIGOR && I2C
@@ -1181,7 +1219,7 @@ config TOUCHSCREEN_MAXIM_STI
 config SECURE_TOUCH
 	bool "Secure Touch"
 	depends on (TOUCHSCREEN_SYNAPTICS_I2C_RMI4 || \
-	  TOUCHSCREEN_SYNAPTICS_DSX_I2C_v21)
+	  TOUCHSCREEN_SYNAPTICS_DSX_I2C_v21 || TOUCHSCREEN_SYNAPTICS_DSX_I2C_LETV)
 	help
 	  Say Y here to enable Secure Touch in supported drivers.
 
