@@ -66,7 +66,15 @@
 
 /* time out to wait for USB cable status notification (in ms)*/
 #define SM_INIT_TIMEOUT 30000
-#define DWC3_WAKEUP_SRC_TIMEOUT 1000
+
+#ifdef CONFIG_VENDOR_LEECO
+#define DWC3_HVDCP_CHG_MAX 2000
+#define DWC3_WAKEUP_SRC_TIMEOUT 500
+#else
+#define DWC3_HVDCP_CHG_MAX 1800
+#define DWC3_WAKEUP_SRC_TIMEOUT 5000
+#endif
+
 /* AHB2PHY register offsets */
 #define PERIPH_SS_AHB2PHY_TOP_CFG 0x10
 
@@ -222,6 +230,12 @@ struct dwc3_msm {
 
 	/* VBUS regulator for host mode */
 	struct regulator	*vbus_reg;
+#ifdef CONFIG_VENDOR_LEECO
+	int			vbus_on;
+	struct qpnp_vadc_chip	*vadc_dev;
+	struct qpnp_vadc_chip	*usb_tm_dev;
+	bool			vbus_set_by_cclogic;
+#endif
 	int			vbus_retry_count;
 	bool			resume_pending;
 	atomic_t                pm_suspended;
@@ -2541,6 +2555,138 @@ static irqreturn_t msm_dwc3_pwr_irq_thread(int irq, void *_mdwc)
 	return IRQ_HANDLED;
 }
 
+#ifdef CONFIG_VENDOR_LEECO
+int dwc3_set_msm_usb_host_mode(bool mode)
+{
+	struct dwc3_msm *mdwc = NULL;
+	struct dwc3 *dwc = NULL;
+
+	if (NULL == _msm_dwc)
+		return -ENODEV;
+
+	mdwc = _msm_dwc;
+	dwc = platform_get_drvdata(mdwc->dwc3);
+
+	dev_err(mdwc->dev, "%s = %s_mode.\n", __func__, mode?"host":"device");
+
+	if (mode) {
+		mdwc->id_state = DWC3_ID_GROUND;
+	} else {
+		mdwc->id_state = DWC3_ID_FLOAT;
+	}
+
+	if (atomic_read(&dwc->in_lpm)) {
+		dwc3_resume_work(&mdwc->resume_work);
+	} else {
+		dwc3_ext_event_notify(mdwc);
+	}
+
+	return mode;
+}
+EXPORT_SYMBOL(dwc3_set_msm_usb_host_mode);
+
+static int _msm_usb_vbus_on(struct dwc3_msm *_mdwc)
+{
+	struct dwc3_msm	*mdwc = (_mdwc ? _mdwc : _msm_dwc);
+	int ret = 0;
+
+	if (IS_ERR_OR_NULL(mdwc))
+		return -ENODEV;
+
+	if (!IS_ERR_OR_NULL(mdwc->vbus_reg) && !mdwc->vbus_on) {
+		ret = regulator_enable(mdwc->vbus_reg);
+		dev_info(mdwc->dev, "VBUS ON\n");
+	}
+
+	if (!ret)
+		mdwc->vbus_on = 1;
+	else
+		dev_info(mdwc->dev, "VBUS ON FAILED %d\n", ret);
+
+	return 0;
+}
+static int _msm_usb_vbus_off(struct dwc3_msm *_mdwc)
+{
+	struct dwc3_msm	*mdwc = (_mdwc ? _mdwc : _msm_dwc);
+	int ret = 0;
+
+	if (IS_ERR_OR_NULL(mdwc))
+		return -ENODEV;
+
+	if (!IS_ERR_OR_NULL(mdwc->vbus_reg) && mdwc->vbus_on) {
+		ret = regulator_disable(mdwc->vbus_reg);
+		dev_info(mdwc->dev, "VBUS OFF\n");
+	}
+
+	if (!ret)
+		mdwc->vbus_on = 0;
+	else
+		dev_info(mdwc->dev, "VBUS OFF FAILED %d\n", ret);
+
+	return 0;
+}
+
+int msm_usb_vbus_set(struct dwc3_msm *_mdwc, bool on, bool ext_call)
+{
+	struct dwc3_msm *mdwc = (_mdwc ? _mdwc : _msm_dwc);
+	int ret = 0;
+
+	if (IS_ERR_OR_NULL(mdwc))
+		return -ENODEV;
+
+	if ((ext_call ^ mdwc->vbus_set_by_cclogic))
+		return 0;
+
+	if (on)
+		ret = _msm_usb_vbus_on(mdwc);
+	else
+		ret = _msm_usb_vbus_off(mdwc);
+
+	return ret;
+}
+EXPORT_SYMBOL(msm_usb_vbus_set);
+
+int pi5usb_set_msm_usb_host_mode(bool mode)
+{
+        struct dwc3_msm *mdwc = NULL;
+        struct dwc3 *dwc = NULL;
+
+        if (NULL == _msm_dwc)
+                return -ENODEV;
+
+        mdwc = _msm_dwc;
+        dwc = platform_get_drvdata(mdwc->dwc3);
+
+        dev_err(mdwc->dev, "%s = %s_mode.\n", __func__, mode?"host":"device");
+
+        if (mode) {
+                /* host mode:bsv=0,id=0 */
+                //mdwc->ext_xceiv.id = false;
+		mdwc->id_state = DWC3_ID_GROUND;
+        } else {
+                /* device mode:bsv=1,id=1 */
+                //mdwc->ext_xceiv.id = true;
+		mdwc->id_state = DWC3_ID_FLOAT;
+        }
+
+        if (atomic_read(&dwc->in_lpm)) {
+                dev_dbg(mdwc->dev, "%s: calling resume_work\n", __func__);
+        	dwc3_resume_work(&mdwc->resume_work);
+        } else {
+                dev_dbg(mdwc->dev, "%s: notifying xceiv event\n", __func__);
+                //if (mdwc->otg_xceiv)
+                //        mdwc->ext_xceiv.notify_ext_events(mdwc->otg_xceiv->otg,
+                //                                        DWC3_EVENT_XCEIV_STATE);
+
+		dwc3_ext_event_notify(mdwc);
+        }
+
+        return mode;
+}
+EXPORT_SYMBOL(pi5usb_set_msm_usb_host_mode);
+#endif
+
+
 static irqreturn_t msm_dwc3_pwr_irq(int irq, void *data)
 {
 	struct dwc3_msm *mdwc = data;
@@ -2564,6 +2710,148 @@ static irqreturn_t msm_dwc3_pwr_irq(int irq, void *data)
 	dwc3_pwr_event_handler(mdwc);
 	return IRQ_HANDLED;
 }
+
+#ifdef CONFIG_VENDOR_LEECO
+static int
+get_prop_usbin_voltage_now(struct dwc3_msm *mdwc)
+{
+	int rc = 0;
+	struct qpnp_vadc_result results;
+
+	if (IS_ERR_OR_NULL(mdwc->vadc_dev)) {
+		mdwc->vadc_dev = qpnp_get_vadc(mdwc->dev, "usbin");
+		if (IS_ERR(mdwc->vadc_dev))
+			return PTR_ERR(mdwc->vadc_dev);
+	}
+
+	rc = qpnp_vadc_read(mdwc->vadc_dev, USBIN, &results);
+	if (rc) {
+		pr_err("Unable to read usbin rc=%d\n", rc);
+		return 0;
+	} else {
+		return results.physical;
+	}
+}
+
+extern void letv_pd_set_typec_temperature(int temp);
+/*
+ * Function to read Type-C temp
+ */
+static int get_prop_usbin_temp_now(struct dwc3_msm *mdwc)
+{
+	int rc = 0;
+	struct qpnp_vadc_result results;
+
+	if (IS_ERR_OR_NULL(mdwc->usb_tm_dev)) {
+		mdwc->usb_tm_dev = qpnp_get_vadc(mdwc->dev, "usbtemp");
+		if (IS_ERR(mdwc->usb_tm_dev))
+			return PTR_ERR(mdwc->usb_tm_dev);
+	}
+
+	rc = qpnp_vadc_read(mdwc->usb_tm_dev, LR_MUX10_PU1_AMUX_USB_ID_LV, &results);
+	if (rc) {
+		pr_err("Unable to read usbin rc=%d\n", rc);
+		return 0;
+	} else {
+		letv_pd_set_typec_temperature(results.physical);
+		return results.physical;
+	}
+}
+
+/*
+ * Function to read vph_pwr voltage
+ */
+static int get_prop_vph_pwr_now(struct dwc3_msm *mdwc)
+{
+	int rc = 0;
+	struct qpnp_vadc_result results;
+
+	if (IS_ERR_OR_NULL(mdwc->usb_tm_dev)) {
+		mdwc->usb_tm_dev = qpnp_get_vadc(mdwc->dev, "usbtemp");
+		if (IS_ERR(mdwc->usb_tm_dev))
+			return PTR_ERR(mdwc->usb_tm_dev);
+	}
+
+	rc = qpnp_vadc_read(mdwc->usb_tm_dev, VSYS, &results);
+	if (rc) {
+		pr_err("Unable to read usbin rc=%d\n", rc);
+		return 0;
+	} else {
+		return results.physical;
+	}
+}
+#endif
+/*
+static int dwc3_msm_power_get_property_usb(struct power_supply *psy,
+				  enum power_supply_property psp,
+				  union power_supply_propval *val)
+{
+	struct dwc3_msm *mdwc = container_of(psy, struct dwc3_msm,
+								usb_psy);
+	switch (psp) {
+	case POWER_SUPPLY_PROP_VOLTAGE_MAX:
+		val->intval = mdwc->voltage_max;
+		break;
+	case POWER_SUPPLY_PROP_CURRENT_MAX:
+		val->intval = mdwc->current_max;
+		break;
+	case POWER_SUPPLY_PROP_INPUT_CURRENT_MAX:
+		val->intval = mdwc->typec_current_max;
+		break;
+	case POWER_SUPPLY_PROP_PRESENT:
+		val->intval = mdwc->vbus_active;
+		break;
+	case POWER_SUPPLY_PROP_ONLINE:
+		val->intval = mdwc->online;
+		break;
+	case POWER_SUPPLY_PROP_REAL_TYPE:
+		val->intval = mdwc->usb_supply_type;
+		break;
+	case POWER_SUPPLY_PROP_TYPE:
+		val->intval = psy->type;
+		break;
+#ifdef CONFIG_VENDOR_LEECO
+	case POWER_SUPPLY_PROP_VOLTAGE_NOW:
+		val->intval = get_prop_usbin_voltage_now(mdwc);
+		break;
+#endif
+	case POWER_SUPPLY_PROP_HEALTH:
+		val->intval = mdwc->health_status;
+		break;
+	case POWER_SUPPLY_PROP_USB_OTG:
+		val->intval = !mdwc->id_state;
+		break;
+#ifdef CONFIG_VENDOR_LEECO
+	case POWER_SUPPLY_PROP_LE_USBIN_TEMP:
+		val->intval = get_prop_usbin_temp_now(mdwc);
+		break;
+	case POWER_SUPPLY_PROP_LE_VPH_VOLTAGE:
+		val->intval = get_prop_vph_pwr_now(mdwc);
+		break;
+#endif
+	default:
+		return -EINVAL;
+	}
+	return 0;
+}
+*/
+
+static enum power_supply_property dwc3_msm_pm_power_props_usb[] = {
+	POWER_SUPPLY_PROP_PRESENT,
+	POWER_SUPPLY_PROP_ONLINE,
+	POWER_SUPPLY_PROP_VOLTAGE_MAX,
+	POWER_SUPPLY_PROP_CURRENT_MAX,
+	POWER_SUPPLY_PROP_INPUT_CURRENT_MAX,
+	POWER_SUPPLY_PROP_TYPE,
+	POWER_SUPPLY_PROP_HEALTH,
+	POWER_SUPPLY_PROP_USB_OTG,
+	POWER_SUPPLY_PROP_REAL_TYPE,
+#ifdef CONFIG_VENDOR_LEECO
+	POWER_SUPPLY_PROP_VOLTAGE_NOW,
+	POWER_SUPPLY_PROP_LE_USBIN_TEMP,
+	POWER_SUPPLY_PROP_LE_VPH_VOLTAGE,
+#endif
+};
 
 static int dwc3_cpu_notifier_cb(struct notifier_block *nfb,
 		unsigned long action, void *hcpu)
@@ -3015,6 +3303,41 @@ static ssize_t usb_compliance_mode_store(struct device *dev,
 }
 static DEVICE_ATTR_RW(usb_compliance_mode);
 
+
+#ifdef CONFIG_VENDOR_LEECO
+static int usbheadset_resume_pm_event(struct notifier_block *notifier,
+	   unsigned long event, void *data)
+{
+	struct fb_event *evdata = data;
+	struct dwc3_msm *mdwc = _msm_dwc;
+	ktime_t start, diff;
+	typec_port_state port_state;
+
+	if (!mdwc)
+		return 0;
+
+	start = ktime_get();
+
+	port_state = cclogic_get_port_state();
+
+	if (evdata && evdata->data && event == FB_EVENT_BLANK) {
+		if (mdwc->in_host_mode && !mdwc->vbus_on && (TYPEC_PORT_DFP == port_state))
+			_msm_usb_vbus_on(NULL);
+	}
+
+	diff = ktime_sub(ktime_get(), start);
+	if (ktime_to_ms(diff) > 1000)
+		printk(KERN_EMERG "usbheadset_resume_pm_event timeout \
+		       %d ms\n", (int)ktime_to_ms(diff));
+
+	return 0;
+}
+
+static struct notifier_block usbheadset_pm_resume_notifier_block = {
+	.notifier_call = usbheadset_resume_pm_event,
+};
+#endif
+
 static int dwc3_msm_probe(struct platform_device *pdev)
 {
 	struct device_node *node = pdev->dev.of_node, *dwc3_node;
@@ -3262,6 +3585,11 @@ static int dwc3_msm_probe(struct platform_device *pdev)
 	if (mdwc->no_wakeup_src_in_hostmode)
 		dev_dbg(&pdev->dev, "dwc3 host not using wakeup source\n");
 
+#ifdef CONFIG_VENDOR_LEECO
+	mdwc->vbus_set_by_cclogic = of_property_read_bool(node,
+				"qcom,vbus_set_by_cclogic");
+#endif
+	
 	dwc3_set_notifier(&dwc3_msm_notify_event);
 
 	/* Assumes dwc3 is the first DT child of dwc3-msm */
@@ -3320,6 +3648,11 @@ static int dwc3_msm_probe(struct platform_device *pdev)
 	if (cpu_to_affin)
 		register_cpu_notifier(&mdwc->dwc3_cpu_notifier);
 
+	#ifdef CONFIG_VENDOR_LEECO
+	/* Register headset on Type-C. */
+	fb_register_client(&usbheadset_pm_resume_notifier_block);
+#endif
+	
 	/*
 	 * Clocks and regulators will not be turned on until the first time
 	 * runtime PM resume is called. This is to allow for booting up with
@@ -3452,8 +3785,13 @@ static int dwc3_msm_remove(struct platform_device *pdev)
 	if (mdwc->bus_perf_client)
 		msm_bus_scale_unregister_client(mdwc->bus_perf_client);
 
+#ifdef CONFIG_VENDOR_LEECO
+	/* Disable USB VBUS after removal. */
+	msm_usb_vbus_set(mdwc, 0, false);
+#else
 	if (!IS_ERR_OR_NULL(mdwc->vbus_reg))
 		regulator_disable(mdwc->vbus_reg);
+#endif
 
 	disable_irq(mdwc->hs_phy_irq);
 	if (mdwc->ss_phy_irq)
@@ -3619,9 +3957,21 @@ static int dwc3_otg_start_host(struct dwc3_msm *mdwc, int on)
 		}
 	}
 
+#ifdef CONFIG_VENDOR_LEECO
+		mdwc->vbus_on = 0;
+		_msm_usb_vbus_on(mdwc);
+#endif
+	
 	if (on) {
 		dev_dbg(mdwc->dev, "%s: turn on host\n", __func__);
 
+#ifdef CONFIG_VENDOR_LEECO
+		if (mdwc->in_host_mode) {
+			printk("dwc3 is already in host mode\n");
+			return 0;
+		}
+#endif
+		
 		pm_runtime_get_sync(mdwc->dev);
 		if (mdwc->core_init_failed) {
 			dev_err(mdwc->dev, "%s: Core init failed\n", __func__);
@@ -3639,8 +3989,12 @@ static int dwc3_otg_start_host(struct dwc3_msm *mdwc, int on)
 		usb_phy_notify_connect(mdwc->hs_phy, USB_SPEED_HIGH);
 		dbg_event(0xFF, "StrtHost gync",
 			atomic_read(&mdwc->dev->power.usage_count));
-		if (!IS_ERR(mdwc->vbus_reg))
-			ret = regulator_enable(mdwc->vbus_reg);
+#ifdef CONFIG_VENDOR_LEECO
+		if (mdwc->in_host_mode) {
+			printk("dwc3 is already in host mode\n");
+			return 0;
+		}
+#endif
 		if (ret) {
 			dev_err(mdwc->dev, "unable to enable vbus_reg\n");
 			mdwc->hs_phy->flags &= ~PHY_HOST_MODE;
@@ -3671,8 +4025,13 @@ static int dwc3_otg_start_host(struct dwc3_msm *mdwc, int on)
 			dev_err(mdwc->dev,
 				"%s: failed to add XHCI pdev ret=%d\n",
 				__func__, ret);
+#ifdef CONFIG_VENDOR_LEECO
+			/* Disable USB VBUS if XHCI is gone. */
+			msm_usb_vbus_set(mdwc, 0, false);
+#else
 			if (!IS_ERR(mdwc->vbus_reg))
 				regulator_disable(mdwc->vbus_reg);
+#endif
 			mdwc->hs_phy->flags &= ~PHY_HOST_MODE;
 			mdwc->ss_phy->flags &= ~PHY_HOST_MODE;
 			pm_runtime_put_sync(mdwc->dev);
@@ -3728,16 +4087,30 @@ static int dwc3_otg_start_host(struct dwc3_msm *mdwc, int on)
 		schedule_delayed_work(&mdwc->perf_vote_work,
 				msecs_to_jiffies(1000 * PM_QOS_SAMPLE_SEC));
 	} else {
+#ifdef CONFIG_VENDOR_LEECO
+		if (!mdwc->in_host_mode) {
+			printk("dwc3 is already in device mode\n");
+			return 0;
+		}
+#endif
 		dev_dbg(mdwc->dev, "%s: turn off host\n", __func__);
 
 		usb_unregister_atomic_notify(&mdwc->usbdev_nb);
+#ifdef CONFIG_VENDOR_LEECO
+		/* Try to disable USB VBUS if host is off. */
+		ret = msm_usb_vbus_set(mdwc, 0, false);
+		if (ret) {
+			dev_err(mdwc->dev, "unable to disable vbus_reg\n");
+			ret = 0;
+		}
+#else
 		if (!IS_ERR(mdwc->vbus_reg))
 			ret = regulator_disable(mdwc->vbus_reg);
 		if (ret) {
 			dev_err(mdwc->dev, "unable to disable vbus_reg\n");
 			return ret;
 		}
-
+#endif
 		cancel_delayed_work_sync(&mdwc->perf_vote_work);
 		msm_dwc3_perf_vote_update(mdwc, false);
 		pm_qos_remove_request(&mdwc->pm_qos_req_dma);
@@ -4179,7 +4552,19 @@ static int dwc3_msm_pm_prepare(struct device *dev)
 	return 0;
 }
 
+
+
+
+#ifdef CONFIG_VENDOR_LEECO
+extern int cclogic_get_audio_mode(void);
+#endif
+
 #ifdef CONFIG_PM_SLEEP
+#ifdef CONFIG_VENDOR_LEECO
+int usb_vbus_suspend = 0;
+extern int letv_audio_mode_supported(void *data);
+
+#endif
 static int dwc3_msm_pm_suspend(struct device *dev)
 {
 	int ret = 0;
@@ -4201,7 +4586,13 @@ static int dwc3_msm_pm_suspend(struct device *dev)
 
 	flush_work(&mdwc->bus_vote_w);
 	atomic_set(&mdwc->pm_suspended, 1);
-
+#ifdef CONFIG_VENDOR_LEECO
+	if (mdwc->vbus_on && letv_audio_mode_supported(NULL) &&
+		cclogic_get_audio_mode() == 0) {
+		_msm_usb_vbus_off(NULL);
+		mdelay(300);
+	}
+#endif
 	return 0;
 }
 
@@ -4366,42 +4757,3 @@ static void __exit dwc3_msm_exit(void)
 }
 module_exit(dwc3_msm_exit);
 
-/**Added**/
-int pi5usb_set_msm_usb_host_mode(bool mode)
-{
-        struct dwc3_msm *mdwc = NULL;
-        struct dwc3 *dwc = NULL;
-
-        if (NULL == _msm_dwc)
-                return -ENODEV;
-
-        mdwc = _msm_dwc;
-        dwc = platform_get_drvdata(mdwc->dwc3);
-
-        dev_err(mdwc->dev, "%s = %s_mode.\n", __func__, mode?"host":"device");
-
-        if (mode) {
-                /* host mode:bsv=0,id=0 */
-                //mdwc->ext_xceiv.id = false;
-		mdwc->id_state = DWC3_ID_GROUND;
-        } else {
-                /* device mode:bsv=1,id=1 */
-                //mdwc->ext_xceiv.id = true;
-		mdwc->id_state = DWC3_ID_FLOAT;
-        }
-
-        if (atomic_read(&dwc->in_lpm)) {
-                dev_dbg(mdwc->dev, "%s: calling resume_work\n", __func__);
-        	dwc3_resume_work(&mdwc->resume_work);
-        } else {
-                dev_dbg(mdwc->dev, "%s: notifying xceiv event\n", __func__);
-                //if (mdwc->otg_xceiv)
-                //        mdwc->ext_xceiv.notify_ext_events(mdwc->otg_xceiv->otg,
-                //                                        DWC3_EVENT_XCEIV_STATE);
-
-		dwc3_ext_event_notify(mdwc);
-        }
-
-        return mode;
-}
-EXPORT_SYMBOL(pi5usb_set_msm_usb_host_mode);
