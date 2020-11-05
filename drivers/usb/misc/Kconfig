@@ -293,6 +293,10 @@ config USB_QCOM_DIAG_BRIDGE
 	  To compile this driver as a module, choose M here: the
 	  module will be called diag_bridge.  If unsure, choose N.
 
+config USB_CCLOGIC
+	bool "USB cc logic"
+	help
+	  This driver is for cc logic chip
 
 config USB_CCLOGIC_PI5USB
 	bool "USB cc logic PI5USB"

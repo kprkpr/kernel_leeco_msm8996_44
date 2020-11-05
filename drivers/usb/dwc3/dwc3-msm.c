@@ -2782,6 +2782,7 @@ static int get_prop_vph_pwr_now(struct dwc3_msm *mdwc)
 }
 #endif
 /*
+This method is not in dwc3 4.4 and not works
 static int dwc3_msm_power_get_property_usb(struct power_supply *psy,
 				  enum power_supply_property psp,
 				  union power_supply_propval *val)
