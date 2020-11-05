@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2018 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2012-2019 The Linux Foundation. All rights reserved.
  *
  * Previously licensed under the ISC license by Qualcomm Atheros, Inc.
  *
@@ -1542,7 +1542,13 @@ VOS_STATUS hdd_rx_packet_cbk(v_VOID_t *vosContext,
        * Just put packet into backlog queue, not scheduling RX sirq
        */
       if (skb->next) {
+#ifdef RX_LATENCY_OPTIMIZE
+	local_bh_disable();
+	rxstat = netif_receive_skb(skb);
+	local_bh_enable();
+#else
          rxstat = netif_rx(skb);
+#endif
       } else {
           if ((pHddCtx->cfg_ini->rx_wakelock_timeout) &&
               (PACKET_BROADCAST != skb->pkt_type) &&
@@ -1557,7 +1563,13 @@ VOS_STATUS hdd_rx_packet_cbk(v_VOID_t *vosContext,
            * This is the last packet on the chain
            * Scheduling rx sirq
            */
+#ifdef RX_LATENCY_OPTIMIZE
+	local_bh_disable();
+	rxstat = netif_receive_skb(skb);
+	local_bh_enable();
+#else
           rxstat = netif_rx_ni(skb);
+#endif
       }
 
       if (NET_RX_SUCCESS == rxstat)
@@ -1914,10 +1926,14 @@ void hdd_dhcp_pkt_trace_buf_update (struct sk_buff *skb, int is_transmission,
 void hdd_rst_tcp_delack(hdd_context_t *hdd_ctx)
 {
 	enum cnss_bus_width_type  next_level = CNSS_BUS_WIDTH_LOW;
+	struct wlan_rx_tp_data rx_tp_data = {0};
+
+        rx_tp_data.rx_tp_flags |= TCP_DEL_ACK_IND;
+        rx_tp_data.level = next_level;
 
 	hdd_ctx->rx_high_ind_cnt = 0;
 	wlan_hdd_send_svc_nlink_msg(hdd_ctx->radio_index, WLAN_SVC_WLAN_TP_IND,
-				&next_level, sizeof(next_level));
+				&rx_tp_data, sizeof(rx_tp_data));
 }
 #else
 void hdd_rst_tcp_delack(hdd_context_t *hdd_ctx)
