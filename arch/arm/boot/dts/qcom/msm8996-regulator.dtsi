@@ -11,8 +11,6 @@
  */
 
 #include <dt-bindings/interrupt-controller/arm-gic.h>
-#include <dt-bindings/spmi/spmi.h>
-#include <dt-bindings/regulator/max20010.h>
 
 &rpm_bus {
 	/* PM8994 S1 + S6 = 2 phase VDD_CX supply */
@@ -515,7 +513,7 @@
 			compatible = "qcom,spm-regulator";
 			reg = <0x3200 0x100>;
 			regulator-name = "pm8994_s11";
-			regulator-min-microvolt = <475000>;
+			regulator-min-microvolt = <470000>;
 			regulator-max-microvolt = <1140000>;
 			qcom,max-voltage-step = <150000>;
 			qcom,cpu-num = <0>;
@@ -523,7 +521,7 @@
 
 			pm8994_s11_limit: avs-limit-regulator {
 				regulator-name = "pm8994_s11_avs_limit";
-				regulator-min-microvolt = <475000>;
+				regulator-min-microvolt = <470000>;
 				regulator-max-microvolt = <1140000>;
 			};
 		};
@@ -538,17 +536,17 @@
 			compatible = "qcom,qpnp-regulator";
 			reg = <0x1700 0x100>;
 			regulator-name = "pmi8994_s2";
-			regulator-min-microvolt = <475000>;
+			regulator-min-microvolt = <400000>;
 			regulator-max-microvolt = <1015000>;
 			qcom,enable-time = <500>;
 		};
 	};
 
 	qcom,pm8004@5 {
-		compatible ="qcom,spmi-pmic";
-		reg = <0x5 SPMI_USID>;
-		#address-cells = <2>;
-		#size-cells = <0>;
+		spmi-slave-container;
+		reg = <0x5>;
+		#address-cells = <1>;
+		#size-cells = <1>;
 		/*
 		 * PM8004 S2 + S4 = 2 phase VDD_GFX supply when PM8004 is
 		 * present on the board.
@@ -2273,17 +2271,4 @@
 		onnn,restore-reg;
 		status = "disabled";
 	  };
-
-	max20010_vreg: max20010-regulator@38 {
-		compatible = "maxim,max20010";
-		reg = <0x38>;
-		vin-supply = <&hl7509_en_vreg>;
-		regulator-min-microvolt = <600000>;
-		regulator-max-microvolt = <1270000>;
-		regulator-initial-mode = <MAX20010_OPMODE_SYNC>;
-		maxim,vrange-sel = <0>;
-		maxim,soft-start-slew-rate = <5500>;
-		maxim,dvs-slew-rate = <5500>;
-		status = "disabled";
-	};
 };

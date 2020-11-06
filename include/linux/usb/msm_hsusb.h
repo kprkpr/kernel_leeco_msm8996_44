@@ -295,7 +295,7 @@ static inline void msm_usb_irq_disable(bool disable)
 }
 #endif
 
-#ifdef CONFIG_USB_DWC3_QCOM
+#if defined(CONFIG_USB_DWC3_QCOM) || defined(CONFIG_USB_DWC3_X2)
 int msm_ep_config(struct usb_ep *ep, struct usb_request *request);
 int msm_ep_unconfig(struct usb_ep *ep);
 void dwc3_tx_fifo_resize_request(struct usb_ep *ep, bool qdss_enable);
