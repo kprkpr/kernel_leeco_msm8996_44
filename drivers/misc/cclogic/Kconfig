@@ -22,4 +22,30 @@ config TYPEC_CCLOGIC_TUSB320HAI
 	---help---
 	  The TI tusb320hai chip is used as cc-logic of TYPEC 
 
+config USB_CCLOGIC_PI5USB
+	bool "USB cc logic PI5USB"
+	help
+	  This driver is for cc logic chip PI5USB
+
+config USB_CCLOGIC_TUSB302L
+	bool "USB cc logic TUSB302L"
+	help
+	  This driver is for cc logic chip TUSB302L
+
+config USB_CCLOGIC_PTN5150
+	bool "USB cc logic PTN5150"
+	help
+	  This driver is for cc logic chip PTN5150
+
+config USB_CCLOGIC_PER30216
+	bool "USB cc logic PERICOM30216"
+	help
+	  This driver is for cc logic chip PERICOM30216
+
+config USB_CCLOGIC_TUSB320
+	bool "USB cc logic TUSB320"
+	help
+	  This driver is for cc logic chip TUSB320
+
+
 endif # CCLOGIC
