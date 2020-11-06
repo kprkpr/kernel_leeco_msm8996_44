@@ -1892,7 +1892,6 @@ static void sdhci_do_set_ios(struct sdhci_host *host, struct mmc_ios *ios)
 	unsigned long flags;
 	u8 ctrl;
 	struct mmc_host *mmc = host->mmc;
-	int ret;
 
 	if (host->flags & SDHCI_DEVICE_DEAD) {
 		if (!IS_ERR(mmc->supply.vmmc) &&
