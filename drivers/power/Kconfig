@@ -524,15 +524,14 @@ config AXP20X_POWER
 source "drivers/power/reset/Kconfig"
 source "drivers/power/supply/Kconfig"
 
-config QPNP_SMBCHARGER_X2
-        tristate "QPNP SMB Charger driver"
-        depends on SPMI || MSM_SPMI
-        depends on OF_SPMI
-        help
-          Say Y here to enable the dual path switch mode battery charger which
-          supports USB detection and battery charging up to 3A.
-          The driver also offers relevant information to userspace via the
-          power supply framework.
+
+config QPNP_MHL
+	tristate "LeTV MHL state information"
+	default n
+	depends on QPNP_SMBCHARGER
+	help
+	  Say Y here to enable LeTV's MHL state information.
+
 
 endif # POWER_SUPPLY
 
