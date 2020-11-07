@@ -916,9 +916,6 @@ static void dwc3_core_exit_mode(struct dwc3 *dwc)
 		/* do nothing */
 		break;
 	}
-
-	/* de-assert DRVVBUS for HOST and OTG mode */
-	dwc3_set_mode(dwc, DWC3_GCTL_PRTCAP_DEVICE);
 }
 
 /* XHCI reset, resets other CORE registers as well, re-init those */
@@ -1241,7 +1238,7 @@ static int dwc3_probe(struct platform_device *pdev)
 	dev->dma_parms	= dev->parent->dma_parms;
 	dma_set_coherent_mask(dev, dev->parent->coherent_dma_mask);
 
-	dwc->dwc_wq = alloc_ordered_workqueue("dwc_wq", WQ_HIGHPRI);
+	dwc->dwc_wq = alloc_ordered_workqueue("dwc_wq", 0);
 	if (!dwc->dwc_wq) {
 		pr_err("%s: Unable to create workqueue dwc_wq\n", __func__);
 		return -ENOMEM;
