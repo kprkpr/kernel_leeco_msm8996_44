@@ -34,3 +34,4 @@ obj-$(CONFIG_USB_QCOM_DIAG_BRIDGE)	+= diag_ipc_bridge.o
 
 #Added
 obj-$(CONFIG_USB_CYCCG)	        	+= cyccg.o
+obj-$(CONFIG_ANALOGIX_OHIO)             += anx7418/
