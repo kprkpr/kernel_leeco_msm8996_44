@@ -782,6 +782,7 @@ static void i2c_device_shutdown(struct device *dev)
 		driver->shutdown(client);
 }
 
+
 static void i2c_client_dev_release(struct device *dev)
 {
 	kfree(to_i2c_client(dev));
@@ -816,6 +817,7 @@ static struct attribute *i2c_dev_attrs[] = {
 	NULL
 };
 ATTRIBUTE_GROUPS(i2c_dev);
+
 
 struct bus_type i2c_bus_type = {
 	.name		= "i2c",
