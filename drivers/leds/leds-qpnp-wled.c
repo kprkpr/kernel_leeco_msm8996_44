@@ -582,8 +582,8 @@ static int qpnp_wled_set_level(struct qpnp_wled *wled, int level)
 
 #ifdef CONFIG_VENDOR_LEECO
 	reg = 0x00;	
-	rc = qpnp_wled_write_reg(wled, &reg,
-			QPNP_WLED_PSM_EN_REG(wled->ctrl_base));
+	rc = qpnp_wled_write_reg(wled,
+			QPNP_WLED_PSM_EN_REG(wled->ctrl_base), reg);
 	if (rc)
 		return rc;
 #endif

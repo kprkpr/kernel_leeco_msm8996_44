@@ -258,6 +258,9 @@
 #define KPDBL_MODULE_EN_MASK		0x80
 #define NUM_KPDBL_LEDS			4
 #define KPDBL_MASTER_BIT_INDEX		0
+#ifdef CONFIG_VENDOR_LEECO
+#define LED_DEV_BUFF_SIZE			50
+#endif
 
 /**
  * enum qpnp_leds - QPNP supported led ids
@@ -1826,7 +1829,7 @@ static int rgb_duration_config(struct qpnp_led_data *led)
 				pwm_cfg->lut_params);
 
 	if (rc < 0) {
-		dev_err(&led->spmi_dev->dev, "Failed to configure pwm LUT\n");
+		dev_err(&led->pdev->dev, "Failed to configure pwm LUT\n");
 		return rc;
 	}
 
@@ -1912,7 +1915,7 @@ static int qpnp_rgb_set(struct qpnp_led_data *led)
 			RGB_LED_EN_CTL(led->base),
 			led->rgb_cfg->enable, RGB_LED_DISABLE);
 		if (rc) {
-			dev_err(&led->spmi_dev->dev,
+			dev_err(&led->pdev->dev,
 				"Failed to write led enable reg\n");
 			return rc;
 		}
@@ -2978,7 +2981,7 @@ static ssize_t rgb_start_store(struct device *dev,
 		return count;
         }
 
-	led_array = dev_get_drvdata(&led->spmi_dev->dev);
+	led_array = dev_get_drvdata(&led->pdev->dev);
 
 	for (i = 0; i < led_array->num_leds; i++) {
 		switch (led_array[i].id) {
