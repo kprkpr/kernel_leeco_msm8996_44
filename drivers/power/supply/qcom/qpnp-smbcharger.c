@@ -294,7 +294,8 @@ struct smbchg_chip {
 	struct power_supply		*typec_psy;
 	struct power_supply		*dpdm_psy;
 #ifdef CONFIG_VENDOR_LEECO
-	struct power_supply		le_ab_psy;
+	struct power_supply_desc		le_ab_psy_d;
+	struct power_supply		*le_ab_psy;
 #endif
 	int				dc_psy_type;
 	const char			*bms_psy_name;
@@ -4794,7 +4795,9 @@ static void check_battery_type(struct smbchg_chip *chip)
 static void smbchg_external_power_changed(struct power_supply *psy)
 {
 	struct smbchg_chip *chip = power_supply_get_drvdata(psy);
-	int rc, soc;
+	int rc, current_limit=0, soc;
+	#enum power_supply_type usb_supply_type;
+	union power_supply_propval prop = {0,};
 
 	smbchg_aicl_deglitch_wa_check(chip);
 
@@ -4813,13 +4816,9 @@ static void smbchg_external_power_changed(struct power_supply *psy)
 									rc);
 	}
 
-	/* adjust vfloat */
-	smbchg_vfloat_adjust_check(chip);
-
-
 #ifdef CONFIG_VENDOR_LEECO
 	/* Register custom LE charging modes as non SDP as well. */
-	rc = chip->usb_psy->get_property(chip->usb_psy,
+	rc = power_supply_get_property(chip->usb_psy,
 		POWER_SUPPLY_PROP_TYPE, &prop);
 
 	if (prop.intval == POWER_SUPPLY_TYPE_USB_PD
@@ -4842,7 +4841,11 @@ static void smbchg_external_power_changed(struct power_supply *psy)
 			current_limit);
 		goto skip_current_for_non_sdp;
 	}
+skip_current_for_non_sdp:
+	/* adjust vfloat */
+	smbchg_vfloat_adjust_check(chip);
 
+	power_supply_changed(chip->batt_psy);
 #endif
 }
 #ifdef CONFIG_PRODUCT_LE_ZL1
@@ -10114,7 +10117,7 @@ static void smbchg_letv_pd_set_vol_cur_work(struct work_struct *work)
 		smbchg_change_usb_supply_type(chip, POWER_SUPPLY_TYPE_USB_LE_PD);
 	}
 
-	rc = chip->usb_psy->get_property(chip->usb_psy,
+	rc = power_supply_get_property(chip->usb_psy,
 				POWER_SUPPLY_PROP_VOLTAGE_NOW, &prop);
 	if (rc == 0)
 		vbus_vol = prop.intval / 1000;
@@ -10127,7 +10130,7 @@ static void smbchg_letv_pd_set_vol_cur_work(struct work_struct *work)
 	if ((chip->parallel.current_max_ma == 0) || !parallel_psy)
 		fcc_current = chip->fastchg_current_ma;
 	else {
-		parallel_psy->get_property(parallel_psy,
+		power_supply_get_property(parallel_psy,
 			POWER_SUPPLY_PROP_CONSTANT_CHARGE_CURRENT_MAX, &prop);
 		fcc_current = chip->fastchg_current_ma + prop.intval / 1000;
 	}
@@ -10182,7 +10185,7 @@ static void smbchg_pd_charger_init_work(struct work_struct *work)
 		goto out;
 	}
 	msleep(100);
-	rc = chip->usb_psy->get_property(chip->usb_psy,
+	rc = power_supply_get_property(chip->usb_psy,
 				POWER_SUPPLY_PROP_VOLTAGE_NOW, &prop);
 	if (rc == 0) {
 		vbus_vol = prop.intval / 1000;
@@ -10335,6 +10338,7 @@ static int smbchg_probe(struct platform_device *pdev)
 	struct power_supply_config usb_psy_cfg = {};
 	struct power_supply_config batt_psy_cfg = {};
 	struct power_supply_config dc_psy_cfg = {};
+	struct power_supply_config le_ab_psy_cfg = {};
 
 	if (of_property_read_bool(pdev->dev.of_node, "qcom,external-typec")) {
 		/* read the type power supply name */
@@ -10393,7 +10397,7 @@ static int smbchg_probe(struct platform_device *pdev)
 
 
 #ifdef CONFIG_VENDOR_LEECO
-	if (of_property_read_bool(spmi->dev.of_node, "qcom,ignore_otgid")) {
+	if (of_property_read_bool(pdev->dev.of_node, "qcom,ignore_otgid")) {
 		ignore_otgidpin = true;
 	}
 #endif
@@ -10439,7 +10443,7 @@ static int smbchg_probe(struct platform_device *pdev)
 	}
 
 #ifdef CONFIG_QPNP_MHL
-	rc = of_property_read_u32(spmi->dev.of_node,
+	rc = of_property_read_u32(pdev->dev.of_node,
 					"qcom,mhl-wihd", &(chip->mhl_wihd));
 	if (rc) {
 		chip->mhl_wihd = 0;
@@ -10685,22 +10689,33 @@ static int smbchg_probe(struct platform_device *pdev)
 	}
 
 #ifdef CONFIG_VENDOR_LEECO
-	chip->le_ab_psy.name		= "le_ab";
-	chip->le_ab_psy.type		= POWER_SUPPLY_TYPE_LE_AB;
-	chip->le_ab_psy.get_property	= smbchg_le_ab_get_property;
-	chip->le_ab_psy.set_property	= smbchg_le_ab_set_property;
-	chip->le_ab_psy.property_is_writeable = smbchg_le_ab_is_writeable;
-	chip->le_ab_psy.properties		= smbchg_le_ab_properties;
-	chip->le_ab_psy.num_properties =ARRAY_SIZE(smbchg_le_ab_properties);
-	chip->le_ab_psy.supplied_to = smbchg_le_ab_supplicants;
-	chip->le_ab_psy.num_supplicants
+	chip->le_ab_psy_d.name		= "le_ab";
+	chip->le_ab_psy_d.type		= POWER_SUPPLY_TYPE_LE_AB;
+	chip->le_ab_psy_d.get_property	= smbchg_le_ab_get_property;
+	chip->le_ab_psy_d.set_property	= smbchg_le_ab_set_property;
+	chip->le_ab_psy_d.property_is_writeable = smbchg_le_ab_is_writeable;
+	chip->le_ab_psy_d.properties		= smbchg_le_ab_properties;
+	chip->le_ab_psy_d.num_properties =ARRAY_SIZE(smbchg_le_ab_properties);
+	chip->le_ab_psy_cfg.supplied_to = smbchg_le_ab_supplicants;
+	chip->le_ab_psy_cfg.num_supplicants
 		= ARRAY_SIZE(smbchg_le_ab_supplicants);
+	
+	chip->le_ab_psy = devm_power_supply_register(chip->dev,
+			&chip->le_ab_psy_d,
+			&le_ab_psy_cfg);
+	if (IS_ERR(chip->le_ab_psy)) {
+		dev_err(&pdev->dev,
+			"Unable to register le_ab_psy rc = %ld\n",
+			PTR_ERR(chip->le_ab_psy));
+		goto out;
+	}
+	/*
 	rc = power_supply_register(chip->dev, &chip->le_ab_psy);
 	if (rc < 0) {
 		dev_err(&spmi->dev,
 			"Unable to register le_ab rc = %d\n", rc);
 		goto unregister_dc_psy;
-	}
+	}*/
 #endif
 	chip->allow_hvdcp3_detection = true;
 
@@ -10795,7 +10810,7 @@ unregister_dc_psy1:
 #endif
 #ifdef CONFIG_VENDOR_LEECO
 unregister_le_ab_psy:
-	power_supply_unregister(&chip->le_ab_psy);
+	power_supply_unregister(chip->le_ab_psy);
 #endif
 out:
 	handle_usb_removal(chip);
