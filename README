@@ -17,9 +17,7 @@ It can build with 4.9 and 9.x GCC, but while not boots, I recommend using GCC 4.
 
 ## TODO
 
-- Fix undefined reference to `pwm_enable_synchronized'
-
-- Fix some non referenced functions in build
+- Add drivers
 
 - Fixing new defconfig (At least, know what drivers are not there, to add it)
 
