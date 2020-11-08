@@ -32,3 +32,16 @@ It can build with 4.9 and 9.x GCC, but while not boots, I recommend using GCC 4.
 - One expert that sees qpnp-smbcharger.c, I fixed build, but not pro.
 
 - Make it boot
+
+## To build
+
+- Have a aarch64 linux kernel toolchain (GCC 4.9 recommended yet, but other will work)
+
+Ex: https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9
+
+
+    $ export ARCH=arm64 && SUBARCH=arm64
+    $ export CROSS_COMPILE=/path/to/aarch64-linux-android-4.9/bin/aarch64-linux-android-
+    $ make O=out mrproper
+    $ make O=out lineage\_x2_defconfig
+    $ make O=out -j8
