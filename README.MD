@@ -19,7 +19,13 @@ It can build with 4.9 and 9.x GCC, but while not boots, I recommend using GCC 4.
 
 - Fix camera\_v2 sensor msm\_eeprom\_letv imports
 
-- Add drivers
+- Fix leds-qpnp.c (Bad ported)
+
+- Port sound/soc/msm/qdsp6v2/msm-pcm-routing-v2.c and sound/soc/msm/qdsp6v2/q6afe.c
+
+- Search/add more leeco drivers?
+
+- Fix why CONFIG_DIAG doesn't be in .config
 
 - Fixing new defconfig (At least, know what drivers are not there, to add it)
 
