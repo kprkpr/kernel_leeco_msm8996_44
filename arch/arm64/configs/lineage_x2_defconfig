@@ -2388,6 +2388,16 @@ CONFIG_QCOM_DLOAD_MODE=y
 # CONFIG_SYSCON_REBOOT_MODE is not set
 
 #
+# Diag Support
+#
+CONFIG_DIAG_CHAR=y
+
+#
+# DIAG traffic over USB
+#
+CONFIG_DIAG_OVER_USB=y
+
+#
 # Qualcomm Technologies Inc Charger and Fuel Gauge support
 #
 CONFIG_QPNP_SMBCHARGER=y

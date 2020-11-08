@@ -17,6 +17,8 @@ It can build with 4.9 and 9.x GCC, but while not boots, I recommend using GCC 4.
 
 ## TODO
 
+- Fix camera\_v2 sensor msm\_eeprom\_letv imports
+
 - Add drivers
 
 - Fixing new defconfig (At least, know what drivers are not there, to add it)
