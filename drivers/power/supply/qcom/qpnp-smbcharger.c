@@ -294,6 +294,7 @@ struct smbchg_chip {
 	struct power_supply		*typec_psy;
 	struct power_supply		*dpdm_psy;
 #ifdef CONFIG_VENDOR_LEECO
+	struct power_supply_config 	le_ab_psy_cfg; //Seems needed
 	struct power_supply_desc		le_ab_psy_d;
 	struct power_supply		*le_ab_psy;
 #endif
@@ -4796,7 +4797,7 @@ static void smbchg_external_power_changed(struct power_supply *psy)
 {
 	struct smbchg_chip *chip = power_supply_get_drvdata(psy);
 	int rc, current_limit=0, soc;
-	#enum power_supply_type usb_supply_type;
+	//enum power_supply_type usb_supply_type;
 	union power_supply_propval prop = {0,};
 
 	smbchg_aicl_deglitch_wa_check(chip);
@@ -7538,8 +7539,7 @@ static int smbchg_le_ab_set_property(struct power_supply *psy,
 				       const union power_supply_propval *val)
 {
 	int rc = 0;
-	struct smbchg_chip *chip = container_of(psy,
-				struct smbchg_chip, le_ab_psy);
+	struct smbchg_chip *chip = power_supply_get_drvdata(psy);
 
 	switch (prop) {
 	case POWER_SUPPLY_PROP_LE_BLACK_CALL_MODE:
@@ -7559,8 +7559,7 @@ static int smbchg_le_ab_get_property(struct power_supply *psy,
 				       enum power_supply_property prop,
 				       union power_supply_propval *val)
 {
-	struct smbchg_chip *chip = container_of(psy,
-				struct smbchg_chip, le_ab_psy);
+	struct smbchg_chip *chip = power_supply_get_drvdata(psy);
 
 	switch (prop) {
 	case POWER_SUPPLY_PROP_LE_BLACK_CALL_MODE:
@@ -8366,6 +8365,7 @@ static irqreturn_t usbid_change_handler(int irq, void *_chip)
 {
 	struct smbchg_chip *chip = _chip;
 	bool otg_present;
+	union power_supply_propval pval = {0, };
 #ifdef CONFIG_QPNP_MHL
 	enum rid_state rid_sts;
 #endif
@@ -8395,14 +8395,16 @@ static irqreturn_t usbid_change_handler(int irq, void *_chip)
 		if (rid_sts == RID_GROUND) {
 			pr_info("OTG detected\n");
 			msleep(20);
-			power_supply_set_usb_otg(chip->usb_psy, 1);
+			pval.intval = true;
+			power_supply_set_property(chip->usb_psy, POWER_SUPPLY_PROP_USB_OTG,&pval);
 		} else if (rid_sts == RID_MHL) {
 			mhl_insert_flag = 1;
 			mhl_state_uevent(R_MHL, 0);
 			pr_info("MHL detected\n");
 		} else if (rid_sts == RID_FLOAT) {
 			pr_info("plug out detected\n");
-			power_supply_set_usb_otg(chip->usb_psy, 0);
+			pval.intval = false;
+			power_supply_set_property(chip->usb_psy, POWER_SUPPLY_PROP_USB_OTG,&pval);
 		} else
 			pr_err("unknow rid state\n");
 	} else {
@@ -8411,8 +8413,8 @@ static irqreturn_t usbid_change_handler(int irq, void *_chip)
 			mhl_insert_flag = 1;
 		if (chip->usb_psy) {
 			otg_present = (dw3_id_state == RID_GROUND);
-			power_supply_set_usb_otg(chip->usb_psy,
-						otg_present ? 1 : 0);
+			pval.intval = otg_present ? 1 : 0;
+			power_supply_set_property(chip->usb_psy, POWER_SUPPLY_PROP_USB_OTG,&pval);
 		}
 	}
 #else
@@ -10330,15 +10332,15 @@ static int smbchg_probe(struct platform_device *pdev)
 	struct qpnp_vadc_chip *vadc_dev = NULL, *vchg_vadc_dev = NULL;
 	struct qpnp_vadc_chip *vusb_vadc_dev = NULL;
 	const char *typec_psy_name;
-
-#ifdef CONFIG_QPNP_MHL
-	mhl_kobj_init();
-#endif
-
 	struct power_supply_config usb_psy_cfg = {};
 	struct power_supply_config batt_psy_cfg = {};
 	struct power_supply_config dc_psy_cfg = {};
 	struct power_supply_config le_ab_psy_cfg = {};
+	
+	
+#ifdef CONFIG_QPNP_MHL
+	mhl_kobj_init();
+#endif
 
 	if (of_property_read_bool(pdev->dev.of_node, "qcom,external-typec")) {
 		/* read the type power supply name */

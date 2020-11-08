@@ -11,14 +11,18 @@ Legacy interfaces may be obsoleted in 4.4 like some from I2C, I fix for ex. the 
 
 Seems that IIO defconfig flags are needed for build
 
+QPNP Driver is modified a lot.. Don't expect 100% great work
+
 It can build with 4.9 and 9.x GCC, but while not boots, I recommend using GCC 4.9
 
 ## TODO
 
-- Fix qpnp-charger merge (That now lives in drivers/power/supply/qcom). After merge, doesn't compile. Errors about 
+- Fix undefined reference to `pwm_enable_synchronized'
 
 - Fix some non referenced functions in build
 
 - Fixing new defconfig (At least, know what drivers are not there, to add it)
+
+- One expert that sees qpnp-smbcharger.c, I fixed build, but not pro.
 
 - Make it boot

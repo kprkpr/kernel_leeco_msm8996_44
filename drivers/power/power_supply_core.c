@@ -92,7 +92,9 @@ static void power_supply_changed_work(struct work_struct *work)
 		spin_unlock_irqrestore(&psy->changed_lock, flags);
 		class_for_each_device(power_supply_class, NULL, psy,
 				      __power_supply_changed_work);
+#ifndef CONFIG_VENDOR_LEECO
 		power_supply_update_leds(psy);
+#endif
 		atomic_notifier_call_chain(&power_supply_notifier,
 				PSY_EVENT_PROP_CHANGED, psy);
 		kobject_uevent(&psy->dev.kobj, KOBJ_CHANGE);
@@ -146,6 +148,7 @@ static void power_supply_deferred_register_work(struct work_struct *work)
 	if (psy->dev.parent)
 		mutex_unlock(&psy->dev.parent->mutex);
 }
+
 
 #ifdef CONFIG_OF
 #include <linux/of.h>
