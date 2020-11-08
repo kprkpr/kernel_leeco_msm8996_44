@@ -17,17 +17,17 @@ It can build with 4.9 and 9.x GCC, but while not boots, I recommend using GCC 4.
 
 ## TODO
 
-- Fix camera\_v2 sensor msm\_eeprom\_letv imports
+- Fix drivers/media/platform/msm/camera_v2/sensor/eeprom/ \_eeprom\_letv imports
 
 - Fix leds-qpnp.c (Bad ported)
 
-- Port sound/soc/msm/qdsp6v2/msm-pcm-routing-v2.c and sound/soc/msm/qdsp6v2/q6afe.c
+- Port sound/soc/msm/qdsp6v2/msm-pcm-routing-v2.c and sound/soc/msm/qdsp6v2/q6afe.c if needed (They are very different in 3.18 and 4.4)
 
 - Search/add more leeco drivers?
 
 - Fix why CONFIG_DIAG doesn't be in .config
 
-- Fixing new defconfig (At least, know what drivers are not there, to add it)
+- More fixing new defconfig (At least, know what drivers are not there, to add it)
 
 - One expert that sees qpnp-smbcharger.c, I fixed build, but not pro.
 
@@ -43,5 +43,5 @@ Ex: https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64
     $ export ARCH=arm64 && SUBARCH=arm64
     $ export CROSS_COMPILE=/path/to/aarch64-linux-android-4.9/bin/aarch64-linux-android-
     $ make O=out mrproper
-    $ make O=out lineage\_x2_defconfig
+    $ make O=out lineage_x2_defconfig
     $ make O=out -j8
