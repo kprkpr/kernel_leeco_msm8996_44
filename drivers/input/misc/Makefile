@@ -83,3 +83,7 @@ obj-$(CONFIG_INPUT_PIXART_OTS_PAT9125_SWITCH)	+= ots_pat9125/
 obj-$(CONFIG_INPUT_STMVL53L0)                 += vl53L0/
 obj-$(CONFIG_DRV2605L_HAPTICS)	        += vibrator/
 obj-$(CONFIG_HALL_SWITCH)				+= hall_switch.o
+obj-$(CONFIG_INPUT_NXU810)	+= nxu8010_driver.o
+obj-$(CONFIG_SENSORS_LTR553)	+= ltr553.o
+
+obj-$(CONFIG_INPUT_NXU810)	+= nxu8010_driver.o
