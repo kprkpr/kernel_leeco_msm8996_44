@@ -17,8 +17,6 @@ It can build with 4.9 and 9.x GCC, but while not boots, I recommend using GCC 4.
 
 ## TODO
 
-- Fix drivers/media/platform/msm/camera_v2/sensor/eeprom/ \_eeprom\_letv imports
-
 - Port sound/soc/msm/qdsp6v2/msm-pcm-routing-v2.c and sound/soc/msm/qdsp6v2/q6afe.c if needed (They are very different in 3.18 and 4.4)
 
 - Search/add more leeco drivers?
