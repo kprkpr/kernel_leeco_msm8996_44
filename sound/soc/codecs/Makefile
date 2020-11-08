@@ -1,3 +1,4 @@
+snd-soc-es9018-objs := es9018.o
 snd-soc-88pm860x-objs := 88pm860x-codec.o
 snd-soc-ab8500-codec-objs := ab8500-codec.o
 snd-soc-ac97-objs := ac97.o
@@ -426,6 +427,8 @@ obj-$(CONFIG_SND_SOC_MSM_STUB)  += snd-soc-msm-stub.o
 # Amp
 obj-$(CONFIG_SND_SOC_MAX9877)	+= snd-soc-max9877.o
 obj-$(CONFIG_SND_SOC_TPA6130A2)	+= snd-soc-tpa6130a2.o
+obj-$(CONFIG_SND_SOC_ES9018)	+= snd-soc-es9018.o
 obj-$(CONFIG_NXP_TFA98xx)       += snd-soc-tfa98xx.o
 obj-y += sdm660_cdc/
 obj-y += msm_sdw/
+

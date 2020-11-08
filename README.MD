@@ -5,11 +5,11 @@ This is a try to port kernel 4.4 to LeEco Le Max 2 from 3.18 one
 
 ## Changes from 3.18 in build things..
 
-Much of defconfig MSM flags are "mainlined" as QCOM flags in kernel 4.4, then, old defconfig it's a bit difficult to parse
+Much of defconfig MSM flags are "mainlined" as QCOM flags in kernel 4.4, then, old defconfig it's bit difficult to parse
 
-Legacy interfaces may be obsoleted in 4.4 like some from I2C, I fix for ex. the ANX7418 one, but may be more while adding to defconfig
+Legacy interfaces may be obsoleted in 4.4 like some from I2C, I fixed ANX7418 one, but may be more while adding to defconfig
 
-Seems that IIO defconfig flags are needed for build
+Don't know if IIO defconfig flags are needed
 
 QPNP Driver is modified a lot.. Don't expect 100% great work
 
