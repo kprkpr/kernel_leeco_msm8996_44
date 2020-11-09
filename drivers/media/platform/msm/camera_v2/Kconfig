@@ -28,6 +28,8 @@ config MSM_CCI
           bus. It is also responsible for synchronization with
           GPIO and data frames.
 
+
+
 config MSM_CSI20_HEADER
         bool "QTI MSM CSI 2.0 Header"
         depends on MSMB_CAMERA
@@ -57,6 +59,12 @@ config MSM_CSI30_HEADER
           values and bit mask for register configuration bits
           This config macro is required for targets based on
           8064 platforms.
+
+config MSM_I2C_FLASH
+        bool "Letv's I2C Flash Interface for Qualcomm MSM platform"
+        depends on MSMB_CAMERA
+        ---help---
+          Enable support for I2C Flash within Qualcomm MSM camera driver.
 
 config MSM_CSI31_HEADER
         bool "QTI MSM CSI 3.1 Header"
