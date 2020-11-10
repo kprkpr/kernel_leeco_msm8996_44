@@ -22,21 +22,21 @@ It can build with 4.9 and 9.x GCC, but while not boots, I recommend using GCC 4.
 - Search/add more leeco drivers?
 
 - defconfig checks:
-
-    CONFIG_DIAG_CHAR=y
-    CONFIG_DIAG_OVER_USB=y
-    CONFIG_REGULATOR_CPR3_VOLTAGE_CONTROL=y
-    CONFIG_FB_MSM_MDSS_KCAL_CTRL  (Not exists)
-    CONFIG_SOUND_CONTROL=y (not exists)
-    CONFIG_BUS_TOPOLOGY_ADHOC=y
-    CONFIG_MSM_CPU_PWR_CTL=y
-    CONFIG_MSM_RPM_SMD=y
-    CONFIG_MSM_RPM_LOG=y
-    CONFIG_MSM_RPM_STATS_LOG=y
-    CONFIG_MSM_RUN_QUEUE_STATS=y
-    CONFIG_MSM_POWER=y
-
-    CONFIG_SOC_WCD9335 why not in final .config
+```
+CONFIG_DIAG_CHAR=y
+CONFIG_DIAG_OVER_USB=y
+CONFIG_REGULATOR_CPR3_VOLTAGE_CONTROL=y
+CONFIG_FB_MSM_MDSS_KCAL_CTRL  (Not exists)
+CONFIG_SOUND_CONTROL=y (not exists)
+CONFIG_BUS_TOPOLOGY_ADHOC=y
+CONFIG_MSM_CPU_PWR_CTL=y
+CONFIG_MSM_RPM_SMD=y
+CONFIG_MSM_RPM_LOG=y
+CONFIG_MSM_RPM_STATS_LOG=y
+CONFIG_MSM_RUN_QUEUE_STATS=y
+CONFIG_MSM_POWER=y
+CONFIG_SOC_WCD9335 why not in final .config
+```
 
 - More fixing new defconfig (At least, know what drivers are not there, to add it)
 
