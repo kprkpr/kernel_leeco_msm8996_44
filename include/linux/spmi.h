@@ -48,6 +48,11 @@ struct spmi_device {
 	struct device		dev;
 	struct spmi_controller	*ctrl;
 	u8			usid;
+#if CONFIG_DEBUG_FS
+	struct dentry		*dfs_dir;
+	u32			dfs_cnt;
+	u32			dfs_addr;
+#endif
 };
 
 static inline struct spmi_device *to_spmi_device(struct device *d)
@@ -93,6 +98,9 @@ struct spmi_controller {
 			    u8 sid, u16 addr, u8 *buf, size_t len);
 	int	(*write_cmd)(struct spmi_controller *ctrl, u8 opcode,
 			     u8 sid, u16 addr, const u8 *buf, size_t len);
+#if CONFIG_DEBUG_FS
+	struct dentry		*dfs_dir;
+#endif
 };
 
 static inline struct spmi_controller *to_spmi_controller(struct device *d)

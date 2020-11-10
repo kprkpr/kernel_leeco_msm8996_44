@@ -27,6 +27,27 @@ It can build with 4.9 and 9.x GCC, but while not boots, I recommend using GCC 4.
 
 - One expert that sees qpnp-smbcharger.c, I fixed build, but not pro.
 
+## Fix this error!
+
+'''
+ CC      drivers/spmi/qpnp-int.o
+../drivers/spmi/qpnp-int.c: In function 'qpnpint_spmi_read':
+../drivers/spmi/qpnp-int.c:129:33: warning: passing argument 1 of 'spmi_ext_register_readl' from incompatible pointer type
+  return spmi_ext_register_readl(chip_d->spmi_ctrl,
+                                 ^
+In file included from ../drivers/spmi/qpnp-int.c:25:0:
+../include/linux/spmi.h:198:5: note: expected 'struct spmi_device *' but argument is of type 'struct spmi_controller *'
+ int spmi_ext_register_readl(struct spmi_device *sdev, u16 addr, u8 *buf,
+     ^
+../drivers/spmi/qpnp-int.c: In function 'qpnpint_spmi_write':
+../drivers/spmi/qpnp-int.c:142:32: warning: passing argument 1 of 'spmi_ext_register_writel' from incompatible pointer type
+  rc = spmi_ext_register_writel(chip_d->spmi_ctrl,
+                                ^
+In file included from ../drivers/spmi/qpnp-int.c:25:0:
+../include/linux/spmi.h:204:5: note: expected 'struct spmi_device *' but argument is of type 'struct spmi_controller *'
+ int spmi_ext_register_writel(struct spmi_device *sdev, u16 addr,
+'''
+
 - Make it boot
 
 ## To build

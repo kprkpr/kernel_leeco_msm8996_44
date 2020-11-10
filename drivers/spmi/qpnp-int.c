@@ -462,7 +462,7 @@ static int qpnpint_irq_domain_dt_translate(struct irq_domain *d,
 	pr_debug("intspec[0] 0x%x intspec[1] 0x%x intspec[2] 0x%x\n",
 				intspec[0], intspec[1], intspec[2]);
 
-	if (d->of_node != controller)
+	if (irq_domain_get_of_node(d) != controller)
 		return -EINVAL;
 	if (intsize != 3)
 		return -EINVAL;
@@ -561,7 +561,7 @@ int qpnpint_register_controller(struct device_node *node,
 		return -EINVAL;
 
 	list_for_each_entry(chip_d, &qpnpint_chips, list)
-		if (node == chip_d->domain->of_node) {
+		if (node == irq_domain_get_of_node(chip_d->domain)) {
 			chip_d->cb = kmemdup(li_cb,
 						sizeof(*li_cb), GFP_ATOMIC);
 			if (!chip_d->cb)
@@ -583,7 +583,7 @@ int qpnpint_unregister_controller(struct device_node *node)
 		return -EINVAL;
 
 	list_for_each_entry(chip_d, &qpnpint_chips, list)
-		if (node == chip_d->domain->of_node) {
+		if (node == irq_domain_get_of_node(chip_d->domain)) {
 			kfree(chip_d->cb);
 			chip_d->cb = NULL;
 			if (chip_d->spmi_ctrl)
