@@ -379,6 +379,7 @@ struct irq_chip {
 	void		(*irq_suspend)(struct irq_data *data);
 	void		(*irq_resume)(struct irq_data *data);
 	void		(*irq_pm_shutdown)(struct irq_data *data);
+	int		(*irq_read_line)(struct irq_data *data);
 
 	void		(*irq_calc_mask)(struct irq_data *data);
 

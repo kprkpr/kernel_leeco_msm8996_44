@@ -455,6 +455,7 @@ struct swr_device_id {
 	kernel_ulong_t driver_data;	/* Data private to the driver */
 };
 
+
 /* dmi */
 enum dmi_field {
 	DMI_NONE,
