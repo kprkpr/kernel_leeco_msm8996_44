@@ -21,7 +21,22 @@ It can build with 4.9 and 9.x GCC, but while not boots, I recommend using GCC 4.
 
 - Search/add more leeco drivers?
 
-- Fix why CONFIG_DIAG doesn't be in .config
+- defconfig checks:
+
+    CONFIG_DIAG_CHAR=y
+    CONFIG_DIAG_OVER_USB=y
+    CONFIG_REGULATOR_CPR3_VOLTAGE_CONTROL=y
+    CONFIG_FB_MSM_MDSS_KCAL_CTRL  (Not exists)
+    CONFIG_SOUND_CONTROL=y (not exists)
+    CONFIG_BUS_TOPOLOGY_ADHOC=y
+    CONFIG_MSM_CPU_PWR_CTL=y
+    CONFIG_MSM_RPM_SMD=y
+    CONFIG_MSM_RPM_LOG=y
+    CONFIG_MSM_RPM_STATS_LOG=y
+    CONFIG_MSM_RUN_QUEUE_STATS=y
+    CONFIG_MSM_POWER=y
+
+    CONFIG_SOC_WCD9335 why not in final .config
 
 - More fixing new defconfig (At least, know what drivers are not there, to add it)
 
@@ -31,20 +46,29 @@ It can build with 4.9 and 9.x GCC, but while not boots, I recommend using GCC 4.
 
 '''
  CC      drivers/spmi/qpnp-int.o
+
 ../drivers/spmi/qpnp-int.c: In function 'qpnpint_spmi_read':
+
 ../drivers/spmi/qpnp-int.c:129:33: warning: passing argument 1 of 'spmi_ext_register_readl' from incompatible pointer type
+
   return spmi_ext_register_readl(chip_d->spmi_ctrl,
                                  ^
 In file included from ../drivers/spmi/qpnp-int.c:25:0:
+
 ../include/linux/spmi.h:198:5: note: expected 'struct spmi_device *' but argument is of type 'struct spmi_controller *'
+
  int spmi_ext_register_readl(struct spmi_device *sdev, u16 addr, u8 *buf,
      ^
 ../drivers/spmi/qpnp-int.c: In function 'qpnpint_spmi_write':
+
 ../drivers/spmi/qpnp-int.c:142:32: warning: passing argument 1 of 'spmi_ext_register_writel' from incompatible pointer type
+
   rc = spmi_ext_register_writel(chip_d->spmi_ctrl,
                                 ^
 In file included from ../drivers/spmi/qpnp-int.c:25:0:
+
 ../include/linux/spmi.h:204:5: note: expected 'struct spmi_device *' but argument is of type 'struct spmi_controller *'
+
  int spmi_ext_register_writel(struct spmi_device *sdev, u16 addr,
 '''
 
