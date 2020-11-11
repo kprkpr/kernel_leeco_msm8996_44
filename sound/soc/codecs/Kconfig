@@ -1008,6 +1008,9 @@ config SND_SOC_ES9018
 	  Say Y here to enable Audio HiFi ES9018 support. This allows
 	  monitoring switches by userspace via sysfs and uevent.
 
+config SOUND_CONTROL
+	bool "Sound control for wcd9335"
+
 source "sound/soc/codecs/sdm660_cdc/Kconfig"
 source "sound/soc/codecs/msm_sdw/Kconfig"
 
