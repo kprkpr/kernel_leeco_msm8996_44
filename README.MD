@@ -94,6 +94,15 @@ Unused functions:
             ^
 ```
 
+```
+../drivers/scsi/ufs/ufshcd.c: In function 'ufshcd_hibern8_hold':
+../drivers/scsi/ufs/ufshcd.c:1911:7: warning: unused variable 'flush_result' [-Wunused-variable]
+ 1911 |  bool flush_result;
+      |       ^~~~~~~~~~~~
+
+```
+
+
 - Make it boot
 
 ## To build
