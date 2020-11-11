@@ -15,28 +15,28 @@ QPNP Driver is modified a lot.. Don't expect 100% great work
 
 It can build with 4.9 and 9.x GCC, but while not boots, I recommend using GCC 4.9
 
+CONFIG\_BUS\_TOPOLOGY\_ADHOC not neccesary, it's in mainline code ever activated.
+
 ## TODO
 
 - Port sound/soc/msm/qdsp6v2/msm-pcm-routing-v2.c and sound/soc/msm/qdsp6v2/q6afe.c if needed (They are very different in 3.18 and 4.4)
 
 - Search/add more leeco drivers?
 
-- defconfig checks:
+- defconfig why doesn't appear in .config (Seems to be not important):
 ```
 CONFIG_DIAG_CHAR=y
 CONFIG_DIAG_OVER_USB=y
-CONFIG_BUS_TOPOLOGY_ADHOC=y
-CONFIG_MSM_CPU_PWR_CTL=y
-CONFIG_MSM_POWER=y
-CONFIG_SOC_WCD9335 why not in final .config
+CONFIG_SOC_WCD9335
 ```
 
 - More fixing new defconfig (At least, know what drivers are not there, to add it)
 
 - One expert that sees qpnp-smbcharger.c, I fixed build, but not pro.
 
-## Fix this error!
+## Fix warnings
 
+That about qpnp-int seems important to work right
 ```
  CC      drivers/spmi/qpnp-int.o
 ../drivers/spmi/qpnp-int.c: In function 'qpnpint_spmi_read':
@@ -54,6 +54,50 @@ In file included from ../drivers/spmi/qpnp-int.c:25:0:
 In file included from ../drivers/spmi/qpnp-int.c:25:0:
 ../include/linux/spmi.h:204:5: note: expected 'struct spmi_device *' but argument is of type 'struct spmi_controller *'
  int spmi_ext_register_writel(struct spmi_device *sdev, u16 addr,
+```
+
+Unused var:
+```
+  CC      sound/soc/codecs/wcd-mbhc-v2.o
+../sound/soc/codecs/wcd-mbhc-v2.c: In function 'wcd_mbhc_init':
+../sound/soc/codecs/wcd-mbhc-v2.c:3032:14: warning: unused variable 'hph_irq_det' [-Wunused-variable]
+  const char *hph_irq_det = "letv,hph_irq_detect";
+```
+
+Unused functions:
+```
+ CC      sound/soc/msm/msm8996.o
+../sound/soc/msm/msm8996.c:5890:12: warning: 'msm_sec_mi2s_rx_be_hw_params_fixup' defined but not used [-Wunused-function]
+ static int msm_sec_mi2s_rx_be_hw_params_fixup(struct snd_soc_pcm_runtime *rtd,
+            ^
+../sound/soc/msm/msm8996.c:5912:12: warning: 'msm_sec_mi2s_tx_be_hw_params_fixup' defined but not used [-Wunused-function]
+ static int msm_sec_mi2s_tx_be_hw_params_fixup(struct snd_soc_pcm_runtime *rtd,
+            ^
+../sound/soc/msm/msm8996.c:5935:12: warning: 'msm_tert_mi2s_rx_be_hw_params_fixup' defined but not used [-Wunused-function]
+ static int msm_tert_mi2s_rx_be_hw_params_fixup(struct snd_soc_pcm_runtime *rtd,
+            ^
+../sound/soc/msm/msm8996.c:6480:27: warning: 'msm8996_sec_mi2s_be_ops' defined but not used [-Wunused-variable]
+ static struct snd_soc_ops msm8996_sec_mi2s_be_ops = {
+                           ^
+../sound/soc/msm/msm8996.c:6485:27: warning: 'msm8996_tert_mi2s_be_ops' defined but not used [-Wunused-variable]
+ static struct snd_soc_ops msm8996_tert_mi2s_be_ops = {
+                           ^
+```
+
+```
+  CC      drivers/power/supply/qcom/qpnp-fg.o
+../drivers/power/supply/qcom/qpnp-fg.c:2044:12: warning: 'soc_to_setpoint' defined but not used [-Wunused-function]
+ static int soc_to_setpoint(int soc)
+```
+
+```
+  CC      drivers/video/fbdev/msm/mdss_panel.o
+../drivers/video/fbdev/msm/mdss_dsi_panel.c:1141:13: warning: 'mdss_dsi_panel_on_hdmi' defined but not used [-Wunused-function]
+ static void mdss_dsi_panel_on_hdmi(struct mdss_dsi_ctrl_pdata *ctrl,
+             ^
+../drivers/video/fbdev/msm/mdss_dsi_panel.c:3139:12: warning: 'mdss_panel_parse_dt_hdmi' defined but not used [-Wunused-function]
+ static int mdss_panel_parse_dt_hdmi(struct device_node *np,
+            ^
 ```
 
 - Make it boot
