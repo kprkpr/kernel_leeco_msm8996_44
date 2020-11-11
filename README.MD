@@ -85,12 +85,6 @@ Unused functions:
 ```
 
 ```
-  CC      drivers/power/supply/qcom/qpnp-fg.o
-../drivers/power/supply/qcom/qpnp-fg.c:2044:12: warning: 'soc_to_setpoint' defined but not used [-Wunused-function]
- static int soc_to_setpoint(int soc)
-```
-
-```
   CC      drivers/video/fbdev/msm/mdss_panel.o
 ../drivers/video/fbdev/msm/mdss_dsi_panel.c:1141:13: warning: 'mdss_dsi_panel_on_hdmi' defined but not used [-Wunused-function]
  static void mdss_dsi_panel_on_hdmi(struct mdss_dsi_ctrl_pdata *ctrl,
