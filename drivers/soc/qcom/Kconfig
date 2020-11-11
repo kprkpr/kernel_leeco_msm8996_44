@@ -1002,4 +1002,20 @@ config MFSE_QMI
 	help
 	 This option enables the QMI client driver for MFSE service.
 
+config MSM_POWER
+	tristate "Power driver to manage system resources"
+	help
+	  This driver monitors and manages system resources for better
+	  power efficiency. It keeps track of the current frequency of
+	  several resources (e.g. CPU and GPU) to manage other system
+	  resources (e.g. DDR frequency) more efficiently.
+
+config MSM_CPU_PWR_CTL
+	bool "Cpu subsystem power control"
+	depends on SMP && (ARM || ARM64)
+	default y
+	help
+	Provides routines to power on cpu rails and l2 cache
+	controller during coldboot.
+
 source "drivers/soc/qcom/memshare/Kconfig"
